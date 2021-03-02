@@ -4,13 +4,19 @@ import {
   ActionCreator,
   ActionCreatorsMapObject
 } from './types/actions'
-
+// 将传入的actionCreator转换成dispatch包裹后的函数
 function bindActionCreator<A extends AnyAction = AnyAction>(
   actionCreator: ActionCreator<A>,
   dispatch: Dispatch
 ) {
   return function (this: any, ...args: any[]) {
     return dispatch(actionCreator.apply(this, args))
+    // 这样应该也行
+    /**
+     * return function() {
+     *  return dispatch(actionCreator.apply(this, arguments))
+     * }
+     */
   }
 }
 
@@ -35,6 +41,7 @@ function bindActionCreator<A extends AnyAction = AnyAction>(
  * function as `actionCreators`, the return value will also be a single
  * function.
  */
+// 将单个或多个ActionCreator 转换成一个dispatch(ActionCreator)的函数
 export default function bindActionCreators<A, C extends ActionCreator<A>>(
   actionCreator: C,
   dispatch: Dispatch
@@ -58,10 +65,11 @@ export default function bindActionCreators(
   actionCreators: ActionCreator<any> | ActionCreatorsMapObject,
   dispatch: Dispatch
 ) {
+  // 判断actionCreators是否为函数，如果是函数就将其和dispatch绑定
   if (typeof actionCreators === 'function') {
     return bindActionCreator(actionCreators, dispatch)
   }
-
+  // 判断actionCreators只能是函数和不包括null的对象
   if (typeof actionCreators !== 'object' || actionCreators === null) {
     throw new Error(
       `bindActionCreators expected an object or a function, instead received ${
@@ -70,13 +78,17 @@ export default function bindActionCreators(
         `Did you write "import ActionCreators from" instead of "import * as ActionCreators from"?`
     )
   }
-
+  // 初始化一个对象
   const boundActionCreators: ActionCreatorsMapObject = {}
+  // 遍历actionCreators
   for (const key in actionCreators) {
+    // 拿对应的函数或对象
     const actionCreator = actionCreators[key]
+    // 如果是函数，绑定函数和dispatch
     if (typeof actionCreator === 'function') {
       boundActionCreators[key] = bindActionCreator(actionCreator, dispatch)
     }
   }
+  // 返回绑定dispatch后的 actionCreators对象
   return boundActionCreators
 }
