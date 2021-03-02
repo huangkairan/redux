@@ -164,7 +164,7 @@ take the result, and check to see if it matches what you expect:
 ```js title="todosSlice.spec.js"
 import todosReducer from './todosSlice'
 
-test(('Toggles a todo based on id') => {
+test('Toggles a todo based on id', () => {
   const initialState = [{ id: 0, text: 'Test text', completed: false }]
 
   const action = { type: 'todos/todoToggled', payload: 0 }
@@ -598,7 +598,7 @@ Let's see how our example app looks now:
 
 <iframe
   class="codesandbox"
-  src="https://codesandbox.io/embed/github/reduxjs/redux-fundamentals-example-app/tree/checkpoint-2-storeSetup/?fontsize=14&hidenavigation=1&theme=dark&module=%2Fsrc%2Fstore.js"
+  src="https://codesandbox.io/embed/github/reduxjs/redux-fundamentals-example-app/tree/checkpoint-2-storeSetup/?fontsize=14&hidenavigation=1&theme=dark&module=%2Fsrc%2Fstore.js&runonclick=1"
   title="redux-fundamentals-example-app"
   allow="geolocation; microphone; camera; midi; vr; accelerometer; gyroscope; payment; ambient-light-sensor; encrypted-media; usb"
   sandbox="allow-modals allow-forms allow-popups allow-scripts allow-same-origin"
