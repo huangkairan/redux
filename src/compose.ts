@@ -10,6 +10,7 @@ type Func<T extends any[], R> = (...a: T) => R
  *   to left. For example, `compose(f, g, h)` is identical to doing
  *   `(...args) => f(g(h(...args)))`.
  */
+// 从后往前将多个函数转换成一个函数
 export default function compose(): <R>(a: R) => R
 
 export default function compose<F extends Function>(f: F): F
@@ -52,6 +53,7 @@ export default function compose(...funcs: Function[]) {
   if (funcs.length === 1) {
     return funcs[0]
   }
-
+  // 用reduce实现将b的执行结果作为参数，传递给a执行；
+  // 传入enhancer的执行顺序是从后往前
   return funcs.reduce((a, b) => (...args: any) => a(b(...args)))
 }
