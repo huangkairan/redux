@@ -10,7 +10,7 @@ import { CombinedState } from './types/store'
 import ActionTypes from './utils/actionTypes'
 import isPlainObject from './utils/isPlainObject'
 import warning from './utils/warning'
-
+// 未定义报错
 function getUndefinedStateErrorMessage(key: string, action: Action) {
   const actionType = action && action.type
   const actionDescription =
@@ -29,19 +29,21 @@ function getUnexpectedStateShapeWarningMessage(
   action: Action,
   unexpectedKeyCache: { [key: string]: true }
 ) {
+  // 拿reducer的key
   const reducerKeys = Object.keys(reducers)
+  // 判断是否在初始化
   const argumentName =
     action && action.type === ActionTypes.INIT
       ? 'preloadedState argument passed to createStore'
       : 'previous state received by the reducer'
-
+  // 没传reducer报错
   if (reducerKeys.length === 0) {
     return (
       'Store does not have a valid reducer. Make sure the argument passed ' +
       'to combineReducers is an object whose values are reducers.'
     )
   }
-
+  // 判断是否普通对象
   if (!isPlainObject(inputState)) {
     const match = Object.prototype.toString
       .call(inputState)
@@ -54,17 +56,17 @@ function getUnexpectedStateShapeWarningMessage(
       `keys: "${reducerKeys.join('", "')}"`
     )
   }
-
+  // 拿inputState中有，reducer中没有的key
   const unexpectedKeys = Object.keys(inputState).filter(
     key => !reducers.hasOwnProperty(key) && !unexpectedKeyCache[key]
   )
-
+  // 给这些key一个值
   unexpectedKeys.forEach(key => {
     unexpectedKeyCache[key] = true
   })
-
+  // 判断actiontype是否为了重置
   if (action && action.type === ActionTypes.REPLACE) return
-
+  // 再次判断有没有漏掉的inputState中有，reducer中无的key
   if (unexpectedKeys.length > 0) {
     return (
       `Unexpected ${unexpectedKeys.length > 1 ? 'keys' : 'key'} ` +
@@ -75,11 +77,13 @@ function getUnexpectedStateShapeWarningMessage(
   }
 }
 
+// 初始化reducer 判断传入的reducers是否合法
 function assertReducerShape(reducers: ReducersMapObject) {
   Object.keys(reducers).forEach(key => {
+    // 拿到每个reducer，并初始化
     const reducer = reducers[key]
     const initialState = reducer(undefined, { type: ActionTypes.INIT })
-
+    // 如果返回值是undefined报错
     if (typeof initialState === 'undefined') {
       throw new Error(
         `Reducer "${key}" returned undefined during initialization. ` +
@@ -89,7 +93,8 @@ function assertReducerShape(reducers: ReducersMapObject) {
           `you can use null instead of undefined.`
       )
     }
-
+    // 如果reducer返回的值是undefined报错
+    // 和这句作用一样 const initialState = reducer(undefined, { type: ActionTypes.INIT })
     if (
       typeof reducer(undefined, {
         type: ActionTypes.PROBE_UNKNOWN_ACTION()
@@ -137,35 +142,44 @@ export default function combineReducers<M extends ReducersMapObject>(
   CombinedState<StateFromReducersMapObject<M>>,
   ActionFromReducersMapObject<M>
 >
+// 组合所有reducer
 export default function combineReducers(reducers: ReducersMapObject) {
+  // 拿到所有reducer的key
   const reducerKeys = Object.keys(reducers)
+  // 用一个对象来存储最终的reducer
   const finalReducers: ReducersMapObject = {}
+  // 遍历
   for (let i = 0; i < reducerKeys.length; i++) {
+    // 拿key
     const key = reducerKeys[i]
-
+    // 判断是否生产环境，如果不是有报错警告
     if (process.env.NODE_ENV !== 'production') {
       if (typeof reducers[key] === 'undefined') {
         warning(`No reducer provided for key "${key}"`)
       }
     }
-
+    // 是function（dispatch）就存入最终的reducer
     if (typeof reducers[key] === 'function') {
       finalReducers[key] = reducers[key]
     }
   }
+  // 拿到处理后的reducer的key
   const finalReducerKeys = Object.keys(finalReducers)
 
   // This is used to make sure we don't warn about the same
   // keys multiple times.
   let unexpectedKeyCache: { [key: string]: true }
+  // 判断是否生产环境，不是就赋值为空对象
   if (process.env.NODE_ENV !== 'production') {
     unexpectedKeyCache = {}
   }
-
+  // 报错
   let shapeAssertionError: Error
   try {
+    // 初始化reducer，判断是否合法
     assertReducerShape(finalReducers)
   } catch (e) {
+    // 捕获error
     shapeAssertionError = e
   }
 
@@ -173,10 +187,11 @@ export default function combineReducers(reducers: ReducersMapObject) {
     state: StateFromReducersMapObject<typeof reducers> = {},
     action: AnyAction
   ) {
+    // 如果有error 先抛出
     if (shapeAssertionError) {
       throw shapeAssertionError
     }
-
+    // 判断是否生产环境，警告信息
     if (process.env.NODE_ENV !== 'production') {
       const warningMessage = getUnexpectedStateShapeWarningMessage(
         state,
@@ -188,23 +203,33 @@ export default function combineReducers(reducers: ReducersMapObject) {
         warning(warningMessage)
       }
     }
-
+    // 是否改变boolean，两个state
     let hasChanged = false
     const nextState: StateFromReducersMapObject<typeof reducers> = {}
+    // 遍历最终的reducer的
     for (let i = 0; i < finalReducerKeys.length; i++) {
+      // 拿key
       const key = finalReducerKeys[i]
+      // 拿每个reducer
       const reducer = finalReducers[key]
+      // 拿state中对应的key
       const previousStateForKey = state[key]
+      // 对state中的key做dispatch
       const nextStateForKey = reducer(previousStateForKey, action)
+      // 如果取到空值 error
       if (typeof nextStateForKey === 'undefined') {
         const errorMessage = getUndefinedStateErrorMessage(key, action)
         throw new Error(errorMessage)
       }
+      // 如果没取到空值就存入新state
       nextState[key] = nextStateForKey
+      // 重新赋值是否改变boolean，判断两个state的key是否相等
       hasChanged = hasChanged || nextStateForKey !== previousStateForKey
     }
+    // 再次赋值是否改变boolean，根据最终reducer的key的长度和新state的key长度是否相等
     hasChanged =
       hasChanged || finalReducerKeys.length !== Object.keys(state).length
+    // 根据是否改变boolean来选择返回新旧state
     return hasChanged ? nextState : state
   }
 }
