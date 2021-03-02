@@ -64,7 +64,9 @@ export default function applyMiddleware(
     reducer: Reducer<S, A>,
     preloadedState?: PreloadedState<S>
   ) => {
+    // 初始化一个store
     const store = createStore(reducer, preloadedState)
+    // 正在构造时无法dispatch，之后会被compose后的dispatch覆盖
     let dispatch: Dispatch = () => {
       throw new Error(
         'Dispatching while constructing your middleware is not allowed. ' +
@@ -76,9 +78,12 @@ export default function applyMiddleware(
       getState: store.getState,
       dispatch: (action, ...args) => dispatch(action, ...args)
     }
+    // 将每个中间件enhancer增强store
     const chain = middlewares.map(middleware => middleware(middlewareAPI))
+    // 用compose将多个enhancer组合成一个 
     dispatch = compose<typeof dispatch>(...chain)(store.dispatch)
-
+    // 返回之前的store和组合后的dispatch
+    // 包装后的dispatch是经过多个enhancer处理的dispatch，真正的redux内部dispatch在最后一个middleware内
     return {
       ...store,
       dispatch
