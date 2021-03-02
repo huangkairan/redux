@@ -3,6 +3,7 @@
  *
  * @param message The warning message.
  */
+// warning函数
 export default function warning(message: string): void {
   /* eslint-disable no-console */
   if (typeof console !== 'undefined' && typeof console.error === 'function') {
