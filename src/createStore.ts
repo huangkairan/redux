@@ -180,7 +180,7 @@ export default function createStore<
     let isSubscribed = true
     // 浅拷贝
     ensureCanMutateNextListeners()
-    // 加入队列
+    // 加入集合
     nextListeners.push(listener)
     // 返回一个取消监听的方法
     return function unsubscribe() {
@@ -197,7 +197,7 @@ export default function createStore<
       }
       // 将是否监听boolean改为false
       isSubscribed = false
-      // 浅拷贝，并从队列中删除
+      // 浅拷贝，并从集合中删除
       ensureCanMutateNextListeners()
       const index = nextListeners.indexOf(listener)
       nextListeners.splice(index, 1)
