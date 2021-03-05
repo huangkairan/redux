@@ -187,7 +187,7 @@ export default function combineReducers(reducers: ReducersMapObject) {
     state: StateFromReducersMapObject<typeof reducers> = {},
     action: AnyAction
   ) {
-    // 如果有error 先抛出
+    // 如果有error 抛出
     if (shapeAssertionError) {
       throw shapeAssertionError
     }
